@@ -1,12 +1,21 @@
 package main
 
 import (
-	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 	"os"
 )
 
-const TextFileExtension = ".txt"
+const (
+	TextFileExtension = ".txt"
+	HtmlFileExtension = ".html"
+)
+
+func makePageFileName(title string) string {
+
+	return title + TextFileExtension
+}
 
 type Page struct {
 	Title string
@@ -14,28 +23,13 @@ type Page struct {
 }
 
 func (p *Page) save() error {
-	filename := makeFileName(p.Title)
+	filename := makePageFileName(p.Title)
 
 	return os.WriteFile(filename, p.Body, 0600)
 }
 
-func main() {
-	page := &Page{Title: "Test Page", Body: []byte("This is a sample page")}
-	page.save()
-
-	loadedPage, _ := loadPage("Test Page")
-	fmt.Println(string(loadedPage.Body))
-}
-
-func viewPageHandler(response http.ResponseWriter, request *http.Request) {
-	title := request.URL.Path[len("/view/"):]
-	page, _ := loadPage(title)
-
-	fmt.Fprintf(response, "<h1>%s</h1><div>%s</div>", page.Title, page.Body)
-}
-
 func loadPage(title string) (*Page, error) {
-	filename := makeFileName(title)
+	filename := makePageFileName(title)
 	body, err := os.ReadFile(filename)
 
 	if err != nil {
@@ -45,7 +39,31 @@ func loadPage(title string) (*Page, error) {
 	return &Page{Title: title, Body: body}, nil
 }
 
-func makeFileName(title string) string {
+func renderTemplate(writer http.ResponseWriter, name string, page *Page) {
+	t, _ := template.ParseFiles(name + HtmlFileExtension)
+	t.Execute(writer, page)
+}
 
-	return title + TextFileExtension
+func viewPageHandler(writer http.ResponseWriter, request *http.Request) {
+	title := request.URL.Path[len("/view/"):]
+	page, _ := loadPage(title)
+
+	renderTemplate(writer, "view", page)
+}
+
+func editPageHandler(writer http.ResponseWriter, request *http.Request) {
+	title := request.URL.Path[len("/edit/"):]
+	page, err := loadPage(title)
+
+	if err != nil {
+		page = &Page{Title: title}
+	}
+
+	renderTemplate(writer, "edit", page)
+}
+
+func main() {
+	http.HandleFunc("/view/", viewPageHandler)
+	http.HandleFunc("/edit/", editPageHandler)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
