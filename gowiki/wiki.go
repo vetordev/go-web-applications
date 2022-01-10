@@ -25,14 +25,14 @@ type Page struct {
 }
 
 func (p *Page) save() error {
-	filename := getFileName(p.Title)
+	filename := getFilename(p.Title)
 
 	return os.WriteFile(filename, p.Body, 0600)
 }
 
 type Handler func(writer http.ResponseWriter, request *http.Request, title string)
 
-func getFileName(title string) string {
+func getFilename(title string) string {
 	return title + TextFileExtension
 }
 
@@ -47,7 +47,7 @@ func getTitle(path string) (string, error) {
 }
 
 func loadPage(title string) (*Page, error) {
-	filename := getFileName(title)
+	filename := getFilename(title)
 	body, err := os.ReadFile(filename)
 
 	if err != nil {
