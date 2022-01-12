@@ -10,14 +10,19 @@ import (
 
 type Service = func(w http.ResponseWriter, r *http.Request, title string)
 
-var (
-	templates = template.Must(template.ParseFiles("./server/template/edit.html", "./server/template/view.html"))
-	validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
-)
-
 const (
 	TextFileExtension = ".txt"
 	HtmlFileExtension = ".html"
+	DataStore         = "\\server\\data\\"
+	TemplateStore     = "\\server\\template\\"
+)
+
+var (
+	projectPath, _ = os.Getwd()
+	templates      = template.Must(
+		template.ParseFiles(projectPath+TemplateStore+"edit.html", projectPath+TemplateStore+"view.html"),
+	)
+	validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 )
 
 type Page struct {
@@ -26,13 +31,12 @@ type Page struct {
 }
 
 func (p *Page) save() error {
-	filename := getFilename(p.Title)
-
-	return os.WriteFile(filename, p.Body, 0600)
+	filePath := getFilePath(p.Title)
+	return os.WriteFile(filePath, p.Body, 0600)
 }
 
-func getFilename(title string) string {
-	return title + TextFileExtension
+func getFilePath(title string) string {
+	return projectPath + DataStore + title + TextFileExtension
 }
 
 func GetTitle(path string) (string, error) {
@@ -46,8 +50,8 @@ func GetTitle(path string) (string, error) {
 }
 
 func loadPage(title string) (*Page, error) {
-	filename := getFilename(title)
-	body, err := os.ReadFile(filename)
+	filePath := getFilePath(title)
+	body, err := os.ReadFile(filePath)
 
 	if err != nil {
 		return nil, err
