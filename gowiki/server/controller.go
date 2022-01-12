@@ -51,7 +51,7 @@ func SaveController(w http.ResponseWriter, r *http.Request) {
 
 func makeHandler(service Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		title, err := getTitle(r.URL.Path)
+		title, err := GetTitle(r.URL.Path)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)

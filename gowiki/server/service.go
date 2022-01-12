@@ -35,7 +35,7 @@ func getFilename(title string) string {
 	return title + TextFileExtension
 }
 
-func getTitle(path string) (string, error) {
+func GetTitle(path string) (string, error) {
 	m := validPath.FindStringSubmatch(path)
 
 	if m == nil {
